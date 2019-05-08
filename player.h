@@ -22,6 +22,7 @@
 #define NEXT_NEXT 2
 #define PICK_FROM_OPEN_DECK 1
 #define PICK_FROM_CLOSED_DECK 2
+#define FALSE_SHOW 100
 class Table;
 class Cards;
 class Player
@@ -37,6 +38,9 @@ private:
     std::vector<std::string> m_Set1;
     std::vector<std::string> m_Set2;
     std::vector<std::string> m_TempMeldCards;
+    bool m_IsPureSequence;
+    bool m_IsValidSequence;
+    bool m_Show;
     int m_TableNo;
 
 public:
@@ -54,7 +58,7 @@ public:
     int GetHandsize() const;
 
     // Calculates the player score.
-    int CalculateScore();
+    int CalculateHandScore(Cards &);
 
     // Clears the both Player's hand and Melded hand.
     void ClearHandandMeldedCards();
@@ -96,7 +100,7 @@ public:
 
     void EraseTheMeldCardFromHand(std::vector<int>);
 
-    void Show();
+    void Show(Cards &);
 
     void ValidateShow();
 
@@ -109,6 +113,12 @@ public:
     bool IsASet(std::vector<int> &, std::vector<char> &, Cards &);
 
     bool IsSuitAvailable(const std::vector<char> &, const char &) const;
+
+    int PreviousCard(int &card_number) const;
+
+    void SetShowValue(bool);
+
+    bool GetShowValue() const;
 };
 
 //bool Player::show = 0;

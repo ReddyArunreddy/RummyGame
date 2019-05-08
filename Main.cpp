@@ -52,7 +52,7 @@ void PlayGame()
             std::cout << "Want to show your hand? press 1.\n";
             std::cin >> show_hand;
             if (show_hand == YES)
-                player1.Show();
+                player1.SetShowValue(true);
         }
         else
         {
@@ -60,22 +60,26 @@ void PlayGame()
             std::cout << "Want to show your hand? press 1.\n";
             std::cin >> show_hand;
             if (show_hand == YES)
-                player2.Show();
+                player2.SetShowValue(true);
         }
         //std::cin.get();
 
         ++turn;
     }
 
-    // later to be implemented...
-    /* 
-   Cards cards;
-   Table table;
-   Player player1("player1");
-   Player player2("player2");
-   player1.JoinTable(table);
-   player2.JoinTable(table);
-   */
+    if(player1.GetShowValue())
+    {
+        player1.Show(deck);
+        player2.CalculateHandScore(deck);
+        player1.SetShowValue(false);
+    }
+
+    if(player2.GetShowValue())
+    {
+        player2.Show(deck);
+        player1.CalculateHandScore(deck);
+        player2.SetShowValue(false);
+    }
 }
 
 void DealDeck(Player &player1, Player &player2, Cards &deck)

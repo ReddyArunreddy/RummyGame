@@ -115,7 +115,7 @@ std::vector<int> Player::CardsToMeld()
 
 void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck)
 {
-	if(!cards_pos_to_meld.size())
+	if (!cards_pos_to_meld.size())
 		return;
 	for (unsigned int i = 0; i < cards_pos_to_meld.size(); i++)
 	{
@@ -127,8 +127,7 @@ void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck
 	//remove the card from hand...
 	EraseTheMeldCardFromHand(cards_pos_to_meld);
 	// sort meld cards...
-	std::sort(m_MeldedCards.begin(), m_MeldedCards.end());
-	std::cout << "calling FindCardSequenceOrSet.\n";
+	//std::sort(m_MeldedCards.begin(), m_MeldedCards.end());
 	FindCardSequenceOrSet(deck);
 }
 
@@ -180,17 +179,23 @@ void Player::DisplayHand() const
 	std::cout << "\n\n";
 }
 
-void Player::Show()
+void Player::Show(Cards &deck)
 {
-	DisplayMeldedCards();
-	show = true;
+	if(m_IsPureSequence && m_IsValidSequence)
+		std::cout << "It's valid show.\n";
+	else
+	{
+		std::cout << "It's not valid show.\n";
+		std::cout << "You hand don't have a Pure sequence and a Valid sequence.\n";
+	}
+
+	std::cout << "Your score is: " << CalculateHandScore(deck) << "\n";
 }
 
 void Player::FindCardSequenceOrSet(Cards &deck)
 {
 	std::vector<int> numbers;
 	std::vector<char> suits;
-	std::cout << "in FindCardSequenceOrSet.\n";
 	for (unsigned short i = 0; i < m_TempMeldCards.size(); i++)
 	{
 		std::string number = m_TempMeldCards[i].substr(0, m_TempMeldCards[i].find("-"));
@@ -199,18 +204,19 @@ void Player::FindCardSequenceOrSet(Cards &deck)
 		numbers.push_back(num);
 		suits.push_back(sui);
 	}
-	std::cout << "after for loop.\n";
 	if (IsAPureSequence(numbers, suits))
 	{
 		std::cout << "It's pure sequence.\n";
 		m_PureSequence = m_TempMeldCards;
+		m_IsPureSequence = true;
 	}
 	else if (ISAValidSequence(numbers, suits, deck))
 	{
 		std::cout << "It's a valid sequence.\n";
 		m_ValidSequence = m_TempMeldCards;
+		m_IsValidSequence = true;
 	}
-	else if(IsASet(numbers, suits, deck))
+	else if (IsASet(numbers, suits, deck))
 	{
 		std::cout << "It's a set.\n";
 	}
@@ -218,39 +224,9 @@ void Player::FindCardSequenceOrSet(Cards &deck)
 
 bool Player::IsAPureSequence(std::vector<int> &numbers, std::vector<char> &suits)
 {
-	/*
-	bool istrue3;
-	bool istrue4;
-	int i = 0;
-	if (numbers[i] == numbers[i + 1] - 1 &&
-		numbers[i + 1] == numbers[i + 2] - 1)
-	{
-		if (numbers.size() == 4)
-			if (numbers[i + 2] == numbers[i + 3] - 1)
-				istrue4 = true;
-
-		istrue3 = true;
-	}
-
-	i = 0;
-	if (istrue3)
-	{
-		if (suits[i] == suits[i + 1] == suits[i + 2])
-			return true;
-	}
-
-	i = 0;
-	if (istrue4)
-	{
-		if (suits[i] == suits[i + 1] == suits[i + 2] == suits[i + 3])
-			return true;
-	}
-	*/
-
 	bool is_pure_sequence;
-	std::cout << "In IsAPureSequence\n";
 	//for sequence A(14) 2 3 or A(14) 2 3 4...
-	if (numbers[0] = 14)
+	if (numbers[0] == 14)
 	{
 		for (unsigned int i = 2; i < numbers.size(); i++)
 		{
@@ -293,7 +269,11 @@ bool Player::ISAValidSequence(std::vector<int> &numbers, std::vector<char> &suit
 	bool is_valid_sequence = false;
 	std::string number = deck.ReturnJoker().substr(0, deck.ReturnJoker().find("-"));
 	int jokernumber = std::atoi(number.c_str());
-	// find out how many joker cards are present...
+	for (unsigned int i = 0; i < numbers.size(); i++)
+	{
+		cardnumber.push_back(numbers[i]);
+		cardsuit.push_back(suits[i]);
+	}
 	for (unsigned int i = 0; i < numbers.size(); i++)
 	{
 		if (numbers[i] == std::atoi(JOKER))
@@ -307,33 +287,28 @@ bool Player::ISAValidSequence(std::vector<int> &numbers, std::vector<char> &suit
 			++O_Joker;
 			is_joker = true;
 		}
-		if (!is_joker)
+		if (is_joker)
 		{
-			
+			if (i == 0)
+			{
+				cardnumber[0] = PreviousCard(cardnumber[1]);
+				cardsuit[0] = cardsuit[1];
+			}
+			if (i == numbers.size() - 1)
+			{
+				cardnumber[i] = cardnumber[i - 1] + 1;
+				cardsuit[i] = cardsuit[i - 1];
+			}
+			else
+			{
+				cardnumber[i] = PreviousCard(cardnumber[i + 1]);
+				cardsuit[i] = cardsuit[i + 1];
+			}
 		}
-		else
-		{
-			cardnumber.push_back(numbers[i]);
-			cardsuit.push_back(suits[i]);
-		}
-		
-
 		is_joker = false;
 	}
-	if (cardnumber.size() == 1) // as there will be only card left as remaining are jokers...
-		return true;
 
-	// check the cards form a valid sequence or not...
-	for (int i = 1; i < cardnumber.size(); i++)
-	{
-		if ((cardnumber[i] == cardnumber[i - 1] + 1) && cardsuit[i] == cardsuit[i - 1])
-			is_valid_sequence = true;
-		else
-			is_valid_sequence = false;
-		if (i == 1 && is_valid_sequence == false)
-			break;
-	}
-	if (is_valid_sequence)
+	if (IsAPureSequence(cardnumber, cardsuit))
 		return true;
 	return false;
 }
@@ -350,7 +325,6 @@ bool Player::IsASet(std::vector<int> &numbers, std::vector<char> &suits, Cards &
 	std::string number = deck.ReturnJoker().substr(0, deck.ReturnJoker().find("-"));
 	int jokernumber = std::atoi(number.c_str());
 	// find out how many joker cards are present...
-	std::cout << "In IsASet\n";
 	for (unsigned int i = 0; i < numbers.size(); i++)
 	{
 		if (numbers[i] == std::atoi(JOKER))
@@ -359,7 +333,7 @@ bool Player::IsASet(std::vector<int> &numbers, std::vector<char> &suits, Cards &
 			is_joker = true;
 		}
 		if (numbers[i] == jokernumber &&
-			'J' == deck.ReturnJoker().substr(deck.ReturnJoker().find("-") + 1).at(0))
+			suits[i] == deck.ReturnJoker().substr(deck.ReturnJoker().find("-") + 1).at(0))
 		{
 			++O_Joker;
 			is_joker = true;
@@ -375,18 +349,20 @@ bool Player::IsASet(std::vector<int> &numbers, std::vector<char> &suits, Cards &
 
 	for (unsigned int i = 1; i < cardnumber.size(); i++)
 	{
-		if (cardnumber[i] == cardnumber[i - 1] && !IsSuitAvailable(cardsuit, cardsuit[i - 1]))
+		if ((cardnumber[i] == cardnumber[i - 1]) && (!IsSuitAvailable(cardsuit, cardsuit[i - 1])))
+		{
 			is_a_set = true;
+		}
 		else
 		{
 			is_a_set = false;
 			break;
 		}
 	}
-	std::cout << "In IsASet\n";
-	if (is_a_set && ((cardnumber.size() + O_Joker + J_Joker) == numbers.size()))
+
+	if (is_a_set && (cardnumber.size() + O_Joker + J_Joker == numbers.size()))
 		return true;
-	std::cout << "In IsASet\n";
+
 	return false;
 }
 
@@ -405,4 +381,71 @@ bool Player::IsSuitAvailable(const std::vector<char> &suits, const char &suit) c
 	if (cnt >= 2)
 		return true;
 	return false;
+}
+
+int Player::PreviousCard(int &card_number) const
+{
+	switch (card_number)
+	{
+	case 2:
+		return 14;
+	case 3:
+		return 2;
+	case 4:
+		return 3;
+	case 5:
+		return 4;
+	case 6:
+		return 5;
+	case 7:
+		return 6;
+	case 8:
+		return 7;
+	case 9:
+		return 8;
+	case 10:
+		return 9;
+	case 11:
+		return 10;
+	case 12:
+		return 11;
+	case 13:
+		return 12;
+	case 14:
+		return 13;
+	}
+}
+
+int Player::CalculateHandScore(Cards &deck)
+{
+	int score = 0;
+	std::vector<int> temp;
+	std::string number = deck.ReturnJoker().substr(0, deck.ReturnJoker().find("-"));
+	int jokernumber = std::atoi(number.c_str());
+	for(unsigned int i=0; i< m_PlayerHand.size(); i++)
+	{
+		std::string number = m_PlayerHand[i].substr(0, m_PlayerHand[i].find("-"));
+		int num = std::atoi(number.c_str());
+		temp.push_back(num);
+	}
+	DisplayMeldedCards();
+	DisplayHand();
+	for (unsigned int i = 0; i < temp.size(); i++)
+	{
+		if(temp[i] != 15 || temp[i] != jokernumber)
+		{
+			score += temp[i];
+		}
+	}
+	return score;
+}
+
+void Player::SetShowValue(bool val)
+{
+	m_Show = val;
+}
+
+bool Player::GetShowValue() const
+{
+	return m_Show;
 }
