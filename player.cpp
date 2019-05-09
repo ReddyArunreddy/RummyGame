@@ -4,7 +4,7 @@ extern bool show;
 Player::Player(std::string name, int score)
 {
 	m_PlayerName = name;
-	m_PlaterScore = score;
+	m_PlayerScore = score;
 }
 void Player::ClearHandandMeldedCards()
 {
@@ -47,6 +47,7 @@ void Player::play(Cards &deck)
 	std::cout << "Your turn " << GetName() << "\n";
 	deck.ShowOpenDeckCards();
 	deck.ShowJokerCard();
+	DisplayMeldedCards();
 	OrganizeHand();
 	DisplayHand();
 
@@ -88,10 +89,31 @@ void Player::DiscardCard(Cards &deck, const int &card_spot)
 void Player::DisplayMeldedCards() const
 {
 	std::cout << "\nYour melded cards are:\n";
+	std::cout << "Pure Sequence: ";
+	for(int i=0; i<m_PureSequence.size(); i++)
+		std::cout << m_PureSequence[i] << " ";
+	std::cout << "\n";
+
+	std::cout << "Valid Sequence: ";
+	for(int i=0; i<m_ValidSequence.size(); i++)
+		std::cout << m_ValidSequence[i] << " ";
+	std::cout << "\n";
+
+	std::cout << "Set1: ";
+	for(int i=0; i<m_Set1.size(); i++)
+		std::cout << m_Set1[i] << " ";
+	std::cout << "\n";
+
+	std::cout << "Set2: ";
+	for(int i=0; i<m_Set2.size(); i++)
+		std::cout << m_Set2[i] << " ";
+	std::cout << "\n";
+	/*
 	for (unsigned int i = 0; i < m_MeldedCards.size(); i++)
 	{
 		std::cout << m_MeldedCards[i] << " ";
 	}
+	*/
 	std::cout << "\n\n";
 }
 
@@ -101,15 +123,19 @@ std::vector<int> Player::CardsToMeld()
 	int card_location = EMPTY;
 
 	std::cout << "\nWhich cards do you want to meld from your hand.\n";
-	std::cout << " Chose three or four card.\n";
+	std::cout << "Chose three or more cards.\n";
 	std::cout << "Pres -1 to end.\n\n";
 	while (card_location != END)
 	{
 		std::cin >> card_location;
+		if(card_location >= m_PlayerHand.size() && card_location != -1)
+		{
+			std::cout << "Please enter a valid card location.\n";
+			std::cin >> card_location;
+		}
 		if (card_location != END)
 			card_to_meld.push_back(card_location);
 	}
-
 	return card_to_meld;
 }
 
@@ -117,6 +143,7 @@ void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck
 {
 	if (!cards_pos_to_meld.size())
 		return;
+	m_TempMeldCards.clear();
 	for (unsigned int i = 0; i < cards_pos_to_meld.size(); i++)
 	{
 		int card_spot = cards_pos_to_meld[i];
@@ -133,6 +160,7 @@ void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck
 
 void Player::EraseTheMeldCardFromHand(std::vector<int> cards_to_delete)
 {
+	std::sort(cards_to_delete.begin(), cards_to_delete.end());
 	for (int j = 1; j < cards_to_delete.size(); j++)
 	{
 		cards_to_delete[j] = cards_to_delete[j] - j;
@@ -164,6 +192,11 @@ std::string Player::GetName() const
 	return m_PlayerName;
 }
 
+int Player::GetScore() const
+{
+	return m_PlayerScore;
+}
+
 void Player::OrganizeHand()
 {
 	std::sort(m_PlayerHand.begin(), m_PlayerHand.end());
@@ -187,9 +220,12 @@ void Player::Show(Cards &deck)
 	{
 		std::cout << "It's not valid show.\n";
 		std::cout << "You hand don't have a Pure sequence and a Valid sequence.\n";
+		m_PlayerScore = FALSE_SHOW;
+		std::cout << GetName() << " Your score is: " << GetScore() << "\n";
+		return;
 	}
 
-	std::cout << "Your score is: " << CalculateHandScore(deck) << "\n";
+	std::cout << GetName() << " Your score is: " << CalculateHandScore(deck) << "\n";
 }
 
 void Player::FindCardSequenceOrSet(Cards &deck)
@@ -219,6 +255,12 @@ void Player::FindCardSequenceOrSet(Cards &deck)
 	else if (IsASet(numbers, suits, deck))
 	{
 		std::cout << "It's a set.\n";
+		if(!m_Set1.size())
+			m_Set1 = m_TempMeldCards;
+		else
+			m_Set2 = m_TempMeldCards;
+
+		m_IsValidSet = true;
 	}
 }
 
@@ -298,6 +340,7 @@ bool Player::ISAValidSequence(std::vector<int> &numbers, std::vector<char> &suit
 			{
 				cardnumber[i] = cardnumber[i - 1] + 1;
 				cardsuit[i] = cardsuit[i - 1];
+				std::cout << cardnumber[i] << " " << cardsuit[i] << "\n";
 			}
 			else
 			{
@@ -437,6 +480,7 @@ int Player::CalculateHandScore(Cards &deck)
 			score += temp[i];
 		}
 	}
+	m_PlayerScore = score;
 	return score;
 }
 

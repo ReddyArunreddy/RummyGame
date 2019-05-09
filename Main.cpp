@@ -43,7 +43,7 @@ void PlayGame()
     deck.SetJokerCard();
 
     unsigned int turn = 0;
-    int show_hand;
+    int show_hand = 0;
     while (!show)
     {
         if (turn % EVEN_ODD == 0)
@@ -52,7 +52,10 @@ void PlayGame()
             std::cout << "Want to show your hand? press 1.\n";
             std::cin >> show_hand;
             if (show_hand == YES)
+            {
                 player1.SetShowValue(true);
+                break;
+            }
         }
         else
         {
@@ -60,7 +63,10 @@ void PlayGame()
             std::cout << "Want to show your hand? press 1.\n";
             std::cin >> show_hand;
             if (show_hand == YES)
-                player2.SetShowValue(true);
+            {
+               player2.SetShowValue(true);
+               break;
+            }
         }
         //std::cin.get();
 
@@ -70,14 +76,18 @@ void PlayGame()
     if(player1.GetShowValue())
     {
         player1.Show(deck);
+        std::cout << player2.GetName() << " Hand:\n";
         player2.CalculateHandScore(deck);
+        std::cout << player2.GetName() << "'s score: " << player2.GetScore() << "\n"; 
         player1.SetShowValue(false);
     }
 
     if(player2.GetShowValue())
     {
         player2.Show(deck);
+        std::cout << player1.GetName() << " Hand:\n";
         player1.CalculateHandScore(deck);
+        std::cout << player1.GetName() << "'s score: " << player1.GetScore() << "\n"; 
         player2.SetShowValue(false);
     }
 }

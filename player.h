@@ -29,7 +29,7 @@ class Player
 {
 private:
     std::string m_PlayerName;               // Player name
-    int m_PlaterScore;                      // Player score
+    int m_PlayerScore;                      // Player score
     std::vector<std::string> m_MeldedCards; // All melded cards will be held here
     std::vector<std::string> m_PlayerHand;  // All 13 cards will be held here
 
@@ -40,6 +40,7 @@ private:
     std::vector<std::string> m_TempMeldCards;
     bool m_IsPureSequence;
     bool m_IsValidSequence;
+    bool m_IsValidSet;
     bool m_Show;
     int m_TableNo;
 
