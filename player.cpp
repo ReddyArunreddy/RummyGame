@@ -1,10 +1,13 @@
 #include "player.h"
-extern bool show;
+extern bool is_genuine_show;
 
 Player::Player(std::string name, int score)
 {
 	m_PlayerName = name;
 	m_PlayerScore = score;
+	m_IsPureSequence = false;
+	m_IsValidSequence = false;
+	m_IsValidSet = false;
 }
 void Player::ClearHandandMeldedCards()
 {
@@ -107,14 +110,7 @@ void Player::DisplayMeldedCards() const
 	std::cout << "Set2: ";
 	for(int i=0; i<m_Set2.size(); i++)
 		std::cout << m_Set2[i] << " ";
-	std::cout << "\n";
-	/*
-	for (unsigned int i = 0; i < m_MeldedCards.size(); i++)
-	{
-		std::cout << m_MeldedCards[i] << " ";
-	}
-	*/
-	std::cout << "\n\n";
+	std::cout << "\n\n\n";
 }
 
 std::vector<int> Player::CardsToMeld()
@@ -136,7 +132,28 @@ std::vector<int> Player::CardsToMeld()
 		if (card_location != END)
 			card_to_meld.push_back(card_location);
 	}
+	if(card_to_meld.size() < 3)
+		card_to_meld.clear();
+	
 	return card_to_meld;
+	/*
+	std::vector<std::string> cards_to_meld;
+	std::string card;
+	while(card != "0")
+	{
+		std::getline(std::cin, card);
+		auto it = std::find(m_PlayerHand.begin(), m_PlayerHand.end(), card);
+		if(it != m_PlayerHand.end())
+			cards_to_meld.push_back(card);
+		else
+		{
+			std::cout << "Enter card is not present!! Please enter the right card.\n";
+			std::getline(std::cin, card);
+		}
+	}
+	*/
+
+	
 }
 
 void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck)
@@ -151,11 +168,18 @@ void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck
 		m_MeldedCards.push_back(card);
 		m_TempMeldCards.push_back(card);
 	}
-	//remove the card from hand...
-	EraseTheMeldCardFromHand(cards_pos_to_meld);
-	// sort meld cards...
-	//std::sort(m_MeldedCards.begin(), m_MeldedCards.end());
+
 	FindCardSequenceOrSet(deck);
+	if(m_PureSequence.size() || m_ValidSequence.size() || m_Set1.size() || m_Set2.size())
+	{
+		//remove the card from hand...
+		EraseTheMeldCardFromHand(cards_pos_to_meld);
+	}
+	else
+	{
+		std::cout << "The chosen cards doesn't form any sequence or set:\n";
+		std::cout << "Please chose the correct cards next time.\n";
+	}
 }
 
 void Player::EraseTheMeldCardFromHand(std::vector<int> cards_to_delete)
@@ -215,13 +239,17 @@ void Player::DisplayHand() const
 void Player::Show(Cards &deck)
 {
 	if(m_IsPureSequence && m_IsValidSequence)
+	{
 		std::cout << "It's valid show.\n";
+		is_genuine_show = true;
+	}	
 	else
 	{
 		std::cout << "It's not valid show.\n";
 		std::cout << "You hand don't have a Pure sequence and a Valid sequence.\n";
 		m_PlayerScore = FALSE_SHOW;
 		std::cout << GetName() << " Your score is: " << GetScore() << "\n";
+		is_genuine_show = false;
 		return;
 	}
 
@@ -465,17 +493,20 @@ int Player::CalculateHandScore(Cards &deck)
 	std::vector<int> temp;
 	std::string number = deck.ReturnJoker().substr(0, deck.ReturnJoker().find("-"));
 	int jokernumber = std::atoi(number.c_str());
+	char jokersuit = deck.ReturnJoker().substr(deck.ReturnJoker().find("-") + 1).at(0);
 	for(unsigned int i=0; i< m_PlayerHand.size(); i++)
 	{
 		std::string number = m_PlayerHand[i].substr(0, m_PlayerHand[i].find("-"));
 		int num = std::atoi(number.c_str());
-		temp.push_back(num);
+		char suit = m_PlayerHand[i].substr(m_PlayerHand[i].find("-") + 1).at(0);
+		if(num != jokernumber && suit != jokersuit)
+			temp.push_back(num);
 	}
 	DisplayMeldedCards();
 	DisplayHand();
 	for (unsigned int i = 0; i < temp.size(); i++)
 	{
-		if(temp[i] != 15 || temp[i] != jokernumber)
+		if(temp[i] != 15)
 		{
 			score += temp[i];
 		}

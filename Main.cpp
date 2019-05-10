@@ -6,7 +6,7 @@
 #define CARDS_DEALT 13
 #define EVEN_ODD 2
 
-bool show;
+bool is_genuine_show;
 
 void PlayGame();
 void DealDeck(Player &, Player &, Cards &);
@@ -44,7 +44,7 @@ void PlayGame()
 
     unsigned int turn = 0;
     int show_hand = 0;
-    while (!show)
+    while (1)
     {
         if (turn % EVEN_ODD == 0)
         {
@@ -64,8 +64,8 @@ void PlayGame()
             std::cin >> show_hand;
             if (show_hand == YES)
             {
-               player2.SetShowValue(true);
-               break;
+                player2.SetShowValue(true);
+                break;
             }
         }
         //std::cin.get();
@@ -73,21 +73,39 @@ void PlayGame()
         ++turn;
     }
 
-    if(player1.GetShowValue())
+    if (player1.GetShowValue())
     {
         player1.Show(deck);
-        std::cout << player2.GetName() << " Hand:\n";
-        player2.CalculateHandScore(deck);
-        std::cout << player2.GetName() << "'s score: " << player2.GetScore() << "\n"; 
+        if (is_genuine_show)
+        {
+            std::cout << player2.GetName() << " Hand:\n";
+            player2.CalculateHandScore(deck);
+            std::cout << player2.GetName() << "'s score: " << player2.GetScore() << "\n";
+        }
+        else
+        {
+            std::cout << "\n\n\n" << player2.GetName() << " You won the game:\n\n\n";
+        }
+        
+
         player1.SetShowValue(false);
     }
 
-    if(player2.GetShowValue())
+    if (player2.GetShowValue())
     {
         player2.Show(deck);
-        std::cout << player1.GetName() << " Hand:\n";
-        player1.CalculateHandScore(deck);
-        std::cout << player1.GetName() << "'s score: " << player1.GetScore() << "\n"; 
+        if (is_genuine_show)
+        {
+            std::cout << player1.GetName() << " Hand:\n";
+            player1.CalculateHandScore(deck);
+            std::cout << player1.GetName() << "'s score: " << player1.GetScore() << "\n";
+        }
+        else
+        {
+            std::cout << "\n\n\n" << player1.GetName() << " Won the game:\n";
+        }
+        
+
         player2.SetShowValue(false);
     }
 }
