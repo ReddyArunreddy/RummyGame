@@ -38,10 +38,12 @@ void PlayGame()
     // Clear the player hand and melded cards...
     player1.ClearHandandMeldedCards();
     player2.ClearHandandMeldedCards();
+    
 
     DealDeck(player1, player2, deck);
     deck.SetJokerCard();
-
+    player1.InitialHandSort();
+    player2.InitialHandSort();
     unsigned int turn = 0;
     int show_hand = 0;
     while (1)

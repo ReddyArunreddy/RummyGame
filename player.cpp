@@ -11,7 +11,7 @@ Player::Player(std::string name, int score)
 }
 void Player::ClearHandandMeldedCards()
 {
-	m_MeldedCards.clear();
+	m_MeldedHand.clear();
 	m_PlayerHand.clear();
 }
 
@@ -29,6 +29,7 @@ int Player::WhatCardToDiscard() const
 {
 	int card_to_discard;
 	std::cout << "Please chose the card to discard.\n";
+	/*
 	std::cin >> card_to_discard;
 
 	while (card_to_discard < EMPTY || card_to_discard >= GetHandsize())
@@ -36,6 +37,26 @@ int Player::WhatCardToDiscard() const
 		std::cout << "Please the right card index.\n";
 		std::cin >> card_to_discard;
 	}
+	*/
+	std::string card;
+	std::cin >> card;
+	bool card_present = false;
+	while(!card_present)
+	{
+		auto it = std::find(m_PlayerHand.begin(), m_PlayerHand.end(), card);
+		if(it != m_PlayerHand.end())
+		{
+			card_to_discard = std::distance(m_PlayerHand.begin(), it);
+			card_present = true;
+		}
+		else
+		{
+			std::cout << "Enterd card is not present !!\n";
+			std::cout << "Please enter thye correct card\n";
+		}
+		
+	}
+	
 
 	return card_to_discard;
 }
@@ -51,14 +72,14 @@ void Player::play(Cards &deck)
 	deck.ShowOpenDeckCards();
 	deck.ShowJokerCard();
 	DisplayMeldedCards();
-	OrganizeHand();
+	//OrganizeHand();
 	DisplayHand();
 
 	int choice = WhatDeckToPickFrom(deck);
 	if (choice != PICK_FROM_CLOSED_DECK)
 	{
 		InsertCardIntoHand(deck.PickFromOpenDeck());
-		OrganizeHand();
+		//OrganizeHand();
 		DisplayHand();
 		MeldTheCards(CardsToMeld(), deck);
 		DisplayMeldedCards();
@@ -66,7 +87,7 @@ void Player::play(Cards &deck)
 	else
 	{
 		InsertCardIntoHand(deck.PickFromClosedDeck());
-		OrganizeHand();
+		//OrganizeHand();
 		DisplayHand();
 		MeldTheCards(CardsToMeld(), deck);
 		DisplayMeldedCards();
@@ -74,7 +95,7 @@ void Player::play(Cards &deck)
 
 	if (GetHandsize() > EMPTY)
 	{
-		OrganizeHand();
+		//OrganizeHand();
 		DisplayHand();
 		DiscardCard(deck, WhatCardToDiscard());
 	}
@@ -120,38 +141,31 @@ std::vector<int> Player::CardsToMeld()
 
 	std::cout << "\nWhich cards do you want to meld from your hand.\n";
 	std::cout << "Chose three or more cards.\n";
-	std::cout << "Pres -1 to end.\n\n";
-	while (card_location != END)
+	
+	std::string card;
+	std::cout << "Pres 0 to end.\n\n";
+	m_TempMeldCards.clear();
+	while(card != "0")
 	{
-		std::cin >> card_location;
-		if(card_location >= m_PlayerHand.size() && card_location != -1)
+		std::cin >> card;
+		auto it = std::find(m_PlayerHand.begin(), m_PlayerHand.end(), card);
+		if(it != m_PlayerHand.end())
 		{
-			std::cout << "Please enter a valid card location.\n";
-			std::cin >> card_location;
+			int index = std::distance(m_PlayerHand.begin() , it);
+			card_to_meld.push_back(index);
+			m_MeldedHand.push_back(card);
+			m_TempMeldCards.push_back(card);
 		}
-		if (card_location != END)
-			card_to_meld.push_back(card_location);
+		else if(card != "0")
+		{
+			std::cout << "Enter card is not present!! Please enter the right card.\n";
+		}
 	}
+	
 	if(card_to_meld.size() < 3)
 		card_to_meld.clear();
 	
 	return card_to_meld;
-	/*
-	std::vector<std::string> cards_to_meld;
-	std::string card;
-	while(card != "0")
-	{
-		std::getline(std::cin, card);
-		auto it = std::find(m_PlayerHand.begin(), m_PlayerHand.end(), card);
-		if(it != m_PlayerHand.end())
-			cards_to_meld.push_back(card);
-		else
-		{
-			std::cout << "Enter card is not present!! Please enter the right card.\n";
-			std::getline(std::cin, card);
-		}
-	}
-	*/
 
 	
 }
@@ -160,14 +174,6 @@ void Player::MeldTheCards(const std::vector<int> &cards_pos_to_meld, Cards &deck
 {
 	if (!cards_pos_to_meld.size())
 		return;
-	m_TempMeldCards.clear();
-	for (unsigned int i = 0; i < cards_pos_to_meld.size(); i++)
-	{
-		int card_spot = cards_pos_to_meld[i];
-		std::string card = m_PlayerHand[card_spot];
-		m_MeldedCards.push_back(card);
-		m_TempMeldCards.push_back(card);
-	}
 
 	FindCardSequenceOrSet(deck);
 	if(m_PureSequence.size() || m_ValidSequence.size() || m_Set1.size() || m_Set2.size())
@@ -351,8 +357,7 @@ bool Player::ISAValidSequence(std::vector<int> &numbers, std::vector<char> &suit
 			++J_Joker;
 			is_joker = true;
 		}
-		if (numbers[i] == jokernumber &&
-			suits[i] == deck.ReturnJoker().substr(deck.ReturnJoker().find("-") + 1).at(0))
+		if (numbers[i] == jokernumber)
 		{
 			++O_Joker;
 			is_joker = true;
@@ -368,7 +373,6 @@ bool Player::ISAValidSequence(std::vector<int> &numbers, std::vector<char> &suit
 			{
 				cardnumber[i] = cardnumber[i - 1] + 1;
 				cardsuit[i] = cardsuit[i - 1];
-				std::cout << cardnumber[i] << " " << cardsuit[i] << "\n";
 			}
 			else
 			{
@@ -403,8 +407,7 @@ bool Player::IsASet(std::vector<int> &numbers, std::vector<char> &suits, Cards &
 			++J_Joker;
 			is_joker = true;
 		}
-		if (numbers[i] == jokernumber &&
-			suits[i] == deck.ReturnJoker().substr(deck.ReturnJoker().find("-") + 1).at(0))
+		if (numbers[i] == jokernumber)
 		{
 			++O_Joker;
 			is_joker = true;
@@ -489,21 +492,25 @@ int Player::PreviousCard(int &card_number) const
 
 int Player::CalculateHandScore(Cards &deck)
 {
+	if(m_IsPureSequence && m_IsValidSequence)
+		return CalculatePlayerHandScore(deck);
+	else
+		return CalculateMeldedHandScore(deck) + CalculatePlayerHandScore(deck);
+}
+int Player::CalculateMeldedHandScore(Cards &deck)
+{
 	int score = 0;
 	std::vector<int> temp;
 	std::string number = deck.ReturnJoker().substr(0, deck.ReturnJoker().find("-"));
 	int jokernumber = std::atoi(number.c_str());
-	char jokersuit = deck.ReturnJoker().substr(deck.ReturnJoker().find("-") + 1).at(0);
-	for(unsigned int i=0; i< m_PlayerHand.size(); i++)
+	for(unsigned int i=0; i< m_MeldedHand.size(); i++)
 	{
-		std::string number = m_PlayerHand[i].substr(0, m_PlayerHand[i].find("-"));
+		std::string number = m_MeldedHand[i].substr(0, m_MeldedHand[i].find("-"));
 		int num = std::atoi(number.c_str());
-		char suit = m_PlayerHand[i].substr(m_PlayerHand[i].find("-") + 1).at(0);
-		if(num != jokernumber && suit != jokersuit)
+		if(num != jokernumber)
 			temp.push_back(num);
+	
 	}
-	DisplayMeldedCards();
-	DisplayHand();
 	for (unsigned int i = 0; i < temp.size(); i++)
 	{
 		if(temp[i] != 15)
@@ -511,7 +518,31 @@ int Player::CalculateHandScore(Cards &deck)
 			score += temp[i];
 		}
 	}
-	m_PlayerScore = score;
+
+	return score;
+}
+
+int Player::CalculatePlayerHandScore(Cards &deck)
+{
+	int score = 0;
+	std::vector<int> temp;
+	std::string number = deck.ReturnJoker().substr(0, deck.ReturnJoker().find("-"));
+	int jokernumber = std::atoi(number.c_str());
+	for(unsigned int i=0; i< m_PlayerHand.size(); i++)
+	{
+		std::string number = m_PlayerHand[i].substr(0, m_PlayerHand[i].find("-"));
+		int num = std::atoi(number.c_str());
+		if(num != jokernumber)
+			temp.push_back(num);		
+	}
+	for (unsigned int i = 0; i < temp.size(); i++)
+	{
+		if(temp[i] != 15)
+		{
+			score += temp[i];
+		}
+	}	
+
 	return score;
 }
 
@@ -523,4 +554,94 @@ void Player::SetShowValue(bool val)
 bool Player::GetShowValue() const
 {
 	return m_Show;
+}
+
+bool Player::ValidatePlayerMeldedHand()
+{
+	if(m_IsPureSequence && m_IsValidSequence)
+		return true;
+	
+	return false;
+}
+bool compare(std::string card1, std::string card2)
+{
+	std::string number1 = card1.substr(0, card1.find("-"));
+	int first = std::atoi(number1.c_str());	
+	std::string number2 = card2.substr(0, card2.find("-"));
+	int second = std::atoi(number2.c_str());
+	std::cout << "sort\n";
+	return first < second;	
+}
+
+void Player::InitialHandSort()
+{
+	std::vector<std::string> Club;
+	std::vector<std::string> Diamond;
+	std::vector<std::string> Heart;
+	std::vector<std::string> Spade;
+	std::vector<std::string> Joker;
+	//std::sort(m_PlayerHand.begin(), m_PlayerHand.end());
+	for(int i=0; i<m_PlayerHand.size(); i++)
+	{
+		std::cout << "In Initialsort\n";
+		char suit = m_PlayerHand[i].substr(m_PlayerHand[i].find("-") + 1).at(0);
+		if(suit == 'C')
+		{
+			Club.push_back(m_PlayerHand[i]);
+		}
+		else if (suit == 'D')
+		{
+			Diamond.push_back(m_PlayerHand[i]);
+		}
+		else if (suit == 'H')
+		{
+			Heart.push_back(m_PlayerHand[i]);
+		}
+		else if (suit == 'S')
+		{
+			Spade.push_back(m_PlayerHand[i]);
+		}
+		else
+		{
+			Joker.push_back(m_PlayerHand[i]);
+		}
+	}
+	for (int i = 0; i < Club.size(); i++)
+	{
+		std::cout << Club[i] << " ";
+	}
+	std::cout <<"\n";
+	std::sort(Club.begin(), Club.end(), compare);
+	std::sort(Diamond.begin(), Diamond.end(), compare);
+	std::sort(Heart.begin(), Heart.end(), compare);
+	std::sort(Spade.begin(), Spade.end(), compare);
+	m_PlayerHand.clear();
+	std::cout << "player hand:\n";
+	for (int i = 0; i < m_PlayerHand.size(); i++)
+	{
+		
+		std::cout << m_PlayerHand[i] << " ";
+	}
+	for (int i = 0; i < Club.size(); i++)
+	{
+		m_PlayerHand.push_back(Club[i]);
+	}
+	for (int i = 0; i < Diamond.size(); i++)
+	{
+		m_PlayerHand.push_back(Diamond[i]);
+	}
+	for (int i = 0; i < Heart.size(); i++)
+	{
+		m_PlayerHand.push_back(Heart[i]);
+	}
+	for (int i = 0; i < Spade.size(); i++)
+	{
+		m_PlayerHand.push_back(Spade[i]);
+	}
+	for (int i = 0; i < Joker.size(); i++)
+	{
+		m_PlayerHand.push_back(Joker[i]);
+	}
+	
+
 }
